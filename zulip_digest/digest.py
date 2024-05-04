@@ -1,6 +1,6 @@
 from io import StringIO
+import logging
 import sys
-from typing import Iterable
 from gpt4all import GPT4All
 
 from zulip_digest.zulip import ZulipMessage
@@ -62,6 +62,7 @@ def summarize_messages(
                 f"Chunk {i_chunk+1}/{len(chunks)} ({len(message_chunk)} messages)\n"
             )
         prompt = _make_prompt(message_chunk, summary)
+        logging.debug("Prompt:\n%s", prompt)
         chunk_summary_generator = model.generate(
             prompt,
             temp=0.2,
