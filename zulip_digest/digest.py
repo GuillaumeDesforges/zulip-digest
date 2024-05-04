@@ -1,5 +1,4 @@
 from io import StringIO
-import logging
 import sys
 from typing import Iterable
 from gpt4all import GPT4All
@@ -15,7 +14,7 @@ def _make_prompt(
         "You are a journalist expert at writing comprehensive neutral summaries of conversations."
         " You do not use any markup, just plain text."
         " The most important thing for me is to be able to understand"
-        " 1) how the topic relates to Nix community governance"
+        " 1) what is the main topic of the conversation,"
         " and 2) what the opinion of the main contributors is."
     )
     if previous_summary:
