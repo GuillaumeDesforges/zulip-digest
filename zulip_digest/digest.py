@@ -10,23 +10,27 @@ def _make_prompt(
     messages: list[ZulipMessage],
     previous_summary: str | None = None,
 ) -> str:
-    prompt = (
+    prompt = ""
+    prompt += (
         "You are a journalist expert at writing comprehensive neutral summaries of conversations on social medias."
-        " You do not use any markup, just plain text."
-        " You are aware that a user can cite other people in their own messages."
-        " The most important thing for me is to be able to understand what the opinion of each user is."
+        "\nYou do not use any markup, just plain text. For example 'Sarah proposes to buy cookies. William agrees Sarah'."
+        "\nThe most important thing for me is to be able to understand what the high-level opinion of each user is."
     )
-    if previous_summary:
-        prompt += f" Given the following summary:\n\n{previous_summary}"
-        prompt += "\n\nPlease complement the summary using the following conversation:"
-    else:
-        prompt += "\n\nPlease write a summary of the following conversation:"
+
+    prompt += "\nNew messages:"
     prompt += "\n---\n"
     prompt += "\n---\n".join(
         f"{message.sender_full_name} posted\n{message.content}" for message in messages
     )
     prompt += "\n---\n"
-    prompt += "Summary:\n"
+
+    if previous_summary:
+        prompt += "\nPlease summarize the novel information in the new messages to append to the summary of the conversation:"
+        prompt += "\nPrevious summary:"
+        prompt += "\n" + previous_summary
+        prompt += "\nContinue:"
+    else:
+        prompt += "\nPlease write a summary of the conversation as bullet points:"
     return prompt
 
 
@@ -66,7 +70,7 @@ def summarize_messages(
         logging.debug("Prompt:\n%s", prompt)
         chunk_summary_generator = model.generate(
             prompt,
-            temp=0.2,
+            temp=0.5,
             streaming=True,
         )
         chunk_summary_builder = StringIO()
@@ -74,7 +78,10 @@ def summarize_messages(
             chunk_summary_builder.write(chunk_summary_token)
             if print_progress:
                 sys.stderr.write(f"Tokens generated : {i_token+1}\r")
-        summary = chunk_summary_builder.getvalue()
+        if summary is None:
+            summary = chunk_summary_builder.getvalue()
+        else:
+            summary += chunk_summary_builder.getvalue()
 
     assert summary is not None
     return summary
