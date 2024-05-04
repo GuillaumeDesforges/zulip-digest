@@ -1,58 +1,72 @@
 from datetime import datetime
 from dataclasses import dataclass
 import logging
+from typing import Generator
 
-from zulip_digest.zulip import PZulipClient, ZulipMessage, ZulipTopic
-
-
-@dataclass(frozen=True)
-class Updates:
-    messages: list[ZulipMessage]
+from zulip_digest.zulip import PZulipClient, ZulipMessage, ZulipStream, ZulipTopic
 
 
-def fetch_updates(
+def fetch_topic(
     client: PZulipClient,
     from_date: datetime,
     to_date: datetime,
-) -> Updates:
-    streams = {stream.stream_id: stream for stream in client.get_streams()}
+    stream: ZulipStream,
+    topic: ZulipTopic,
+) -> Generator[ZulipMessage, None, None]:
+    topic_messages = client.get_messages(
+        anchor="oldest",
+        num_before=1,
+        num_after=1000,
+        narrow=[
+            {"operator": "stream", "operand": stream.name},
+            {"operator": "topic", "operand": topic.name},
+        ],
+    )
+    logging.info(
+        "Fetched %s messages for topic '%s' in stream '%s'",
+        len(topic_messages),
+        topic.name,
+        stream.name,
+    )
+    for message in topic_messages:
+        yield message
+
+
+def fetch_stream(
+    client: PZulipClient,
+    from_date: datetime,
+    to_date: datetime,
+    stream: ZulipStream,
+) -> Generator[ZulipMessage, None, None]:
+    topics = client.get_stream_topics(stream_id=stream.stream_id)
+    logging.info(
+        "Fetched %s topics in stream '%s'",
+        len(topics),
+        stream.name,
+    )
+
+    for topic in topics:
+        yield from fetch_topic(
+            client=client,
+            from_date=from_date,
+            to_date=to_date,
+            stream=stream,
+            topic=topic,
+        )
+
+
+def fetch_all_streams(
+    client: PZulipClient,
+    from_date: datetime,
+    to_date: datetime,
+) -> Generator[ZulipMessage, None, None]:
+    streams = client.get_streams()
     logging.info("Fetched %s streams", len(streams))
 
-    # stream_topics: dict[int, list[ZulipTopic]] = {}
-    # for stream in streams.values():
-    #     stream_topics[stream.stream_id] = client.get_stream_topics(
-    #         stream_id=stream.stream_id
-    #     )
-    #     logging.info(
-    #         "Fetched %s topics in stream '%s'",
-    #         len(stream_topics),
-    #         stream.name,
-    #     )
-
-    messages: list[ZulipMessage] = []
-    for stream in streams.values():
-        stream_messages = client.get_messages(
-            anchor="oldest",
-            narrow=[{"operator": "stream", "operand": stream.name}],
+    for stream in streams:
+        yield from fetch_stream(
+            client=client,
+            from_date=from_date,
+            to_date=to_date,
+            stream=stream,
         )
-        logging.info(
-            "Fetched %s messages for stream '%s'",
-            len(stream_messages),
-            stream.name,
-        )
-        messages.extend(stream_messages)
-    # for topics_stream_id, topics in stream_topics.items():
-    #     for topic in topics:
-    #         topic_messages = client.get_messages(
-    #             anchor="newest",
-    #             narrow=[{"operator": "topic", "operand": topic.name}],
-    #         )
-    #         logging.info(
-    #             "Fetched %s messages for topic '%s' in stream '%s'",
-    #             len(topic_messages),
-    #             topic.name,
-    #             streams[topics_stream_id].name,
-    #         )
-    #         messages.extend(topic_messages)
-
-    return Updates(messages=messages)

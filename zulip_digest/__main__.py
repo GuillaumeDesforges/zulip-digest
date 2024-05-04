@@ -3,7 +3,7 @@ import logging
 import zulip
 import click
 
-from zulip_digest.updates import fetch_updates
+from zulip_digest.updates import fetch_all_streams
 from zulip_digest.zulip import ZulipClient
 
 TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -45,12 +45,12 @@ def cli(
     client = ZulipClient(config_file=".zuliprc")
 
     # run
-    updates = fetch_updates(
+    for message in fetch_all_streams(
         client=client,
         from_date=from_date,
         to_date=to_date,
-    )
-    print(updates)
+    ):
+        print(message.model_dump_json())
 
 
 cli()

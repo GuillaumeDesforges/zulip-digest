@@ -31,7 +31,7 @@ class ZulipMessage(BaseModel):
 
 class ZulipNarrow(TypedDict):
     operator: Literal["sender", "stream", "topic"]
-    operand: str
+    operand: str | int
 
 
 class PZulipClient(Protocol):
