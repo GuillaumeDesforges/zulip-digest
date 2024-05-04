@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "zulip-digest"
+version = "0.1.0"
+description = ""
+authors = ["Guillaume Desforges <guillaume.desforges.pro@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+zulip = "^0.9.0"
+python-dotenv = "^1.0.1"
+click = "^8.1.7"
+pydantic = "^2.7.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.4.3"
+pyright = "^1.1.361"
+pytest = "^8.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
