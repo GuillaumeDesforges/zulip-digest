@@ -1,7 +1,6 @@
-from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any, Literal, Protocol, Type, TypedDict
+from typing import Literal, Protocol, TypedDict
 
 from pydantic import BaseModel
 import zulip
@@ -104,7 +103,7 @@ class ZulipClient(PZulipClient):
         logging.debug(response)
         _validate_response(response)
         parsed_response = ZulipGetMessagesResponse.model_validate(response)
-        if type(anchor) is int and not parsed_response.found_anchor:
+        if isinstance(anchor, int) and not parsed_response.found_anchor:
             raise ValueError(f"Anchor {anchor} not found")
         if anchor == "newest" and not parsed_response.found_newest:
             raise ValueError("Newest message not found")

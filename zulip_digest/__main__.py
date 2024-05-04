@@ -1,9 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
-import zulip
+from gpt4all import GPT4All
 import click
 
-from zulip_digest.updates import fetch_all_streams
+from zulip_digest.digest import summarize_messages
+from zulip_digest.updates import stream_topic_messages
 from zulip_digest.zulip import ZulipClient
 
 TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -11,46 +12,39 @@ TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
 @click.command()
 @click.option(
-    "--from-date",
-    type=click.DateTime(formats=["%Y-%m-%d"]),
-    default=TODAY,
-    help="The date from which to fetch updates",
-)
-@click.option(
-    "--to-date",
-    type=click.DateTime(formats=["%Y-%m-%d"]),
-    default=TODAY + timedelta(days=1),
-    help="The date to which to fetch updates",
-)
-@click.option(
     "--debug",
     is_flag=True,
     help="Enable debug logging",
 )
 def cli(
-    from_date: datetime,
-    to_date: datetime,
     debug: bool,
 ):
     # setup env
     log_level = logging.DEBUG if debug else logging.INFO
     logging.basicConfig(level=log_level)
 
-    # process args
-    from_date = from_date.astimezone()
-    to_date = to_date.astimezone()
-    logging.info("Fetching from %s to %s", from_date, to_date)
-
     # setup
     client = ZulipClient(config_file=".zuliprc")
+    model = GPT4All("mistral-7b-openorca.gguf2.Q4_0.gguf")
 
     # run
-    for message in fetch_all_streams(
-        client=client,
-        from_date=from_date,
-        to_date=to_date,
-    ):
-        print(message.model_dump_json())
+    streams = client.get_streams()
+    for stream in streams:
+        topics = client.get_stream_topics(stream_id=stream.stream_id)
+        for topic in topics:
+            messages = list(
+                stream_topic_messages(
+                    client=client,
+                    stream=stream,
+                    topic=topic,
+                )
+            )
+            topic_summary = summarize_messages(
+                model=model,
+                messages=messages,
+            )
+            logging.info("Summary for %s/%s", stream.name, topic.name)
+            print(topic_summary)
 
 
 cli()

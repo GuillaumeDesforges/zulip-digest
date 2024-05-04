@@ -158,6 +158,25 @@ files = [
 ]
 
 [[package]]
+name = "gpt4all"
+version = "2.6.0"
+description = "Python bindings for GPT4All"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "gpt4all-2.6.0-py3-none-macosx_10_15_universal2.whl", hash = "sha256:2d750cf20a3dbfd9ed0ffbd780161eb2720ae923130e8a259e9dcc9a9b108983"},
+    {file = "gpt4all-2.6.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:506a0e0089044e36e0a0792cd7abba0e2f688669101bc927b8bae4f82409dcec"},
+    {file = "gpt4all-2.6.0-py3-none-win_amd64.whl", hash = "sha256:997c40a4c9ef639eef74861d9eb731e80be29ac8a455b2530df98fdeded6557f"},
+]
+
+[package.dependencies]
+requests = "*"
+tqdm = "*"
+
+[package.extras]
+dev = ["black", "isort", "mkautodoc", "mkdocs-jupyter", "mkdocs-material", "mkdocstrings[python]", "pytest", "setuptools", "twine", "typing-extensions (>=3.10)", "wheel"]
+
+[[package]]
 name = "idna"
 version = "3.7"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -445,6 +464,26 @@ testing = ["build[virtualenv]", "filelock (>=3.4.0)", "importlib-metadata", "ini
 testing-integration = ["build[virtualenv] (>=1.0.3)", "filelock (>=3.4.0)", "jaraco.envs (>=2.2)", "jaraco.path (>=3.2.0)", "packaging (>=23.2)", "pytest", "pytest-enabler", "pytest-xdist", "tomli", "virtualenv (>=13.0.0)", "wheel"]
 
 [[package]]
+name = "tqdm"
+version = "4.66.4"
+description = "Fast, Extensible Progress Meter"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tqdm-4.66.4-py3-none-any.whl", hash = "sha256:b75ca56b413b030bc3f00af51fd2c1a1a5eac6a0c1cca83cbb37a5c52abce644"},
+    {file = "tqdm-4.66.4.tar.gz", hash = "sha256:e4d936c9de8727928f3be6079590e97d9abfe8d39a590be678eb5919ffc186bb"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[package.extras]
+dev = ["pytest (>=6)", "pytest-cov", "pytest-timeout", "pytest-xdist"]
+notebook = ["ipywidgets (>=6)"]
+slack = ["slack-sdk"]
+telegram = ["requests"]
+
+[[package]]
 name = "typing-extensions"
 version = "4.11.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -492,4 +531,4 @@ typing-extensions = ">=4.5.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "f48d8fd7b2834387a9001dbaf095e3ed72e6a27ed056cbdc45d036581619fda1"
+content-hash = "b56c10ec790261940de79bb735817c552afe40dfdec04f952870a58718d37d3c"

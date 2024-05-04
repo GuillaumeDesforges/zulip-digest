@@ -1,22 +1,18 @@
-from datetime import datetime
-from dataclasses import dataclass
 import logging
 from typing import Generator
 
 from zulip_digest.zulip import PZulipClient, ZulipMessage, ZulipStream, ZulipTopic
 
 
-def fetch_topic(
+def stream_topic_messages(
     client: PZulipClient,
-    from_date: datetime,
-    to_date: datetime,
     stream: ZulipStream,
     topic: ZulipTopic,
 ) -> Generator[ZulipMessage, None, None]:
     topic_messages = client.get_messages(
         anchor="oldest",
-        num_before=1,
-        num_after=1000,
+        num_before=0,
+        num_after=5000,
         narrow=[
             {"operator": "stream", "operand": stream.name},
             {"operator": "topic", "operand": topic.name},
@@ -32,10 +28,8 @@ def fetch_topic(
         yield message
 
 
-def fetch_stream(
+def stream_stream_messages(
     client: PZulipClient,
-    from_date: datetime,
-    to_date: datetime,
     stream: ZulipStream,
 ) -> Generator[ZulipMessage, None, None]:
     topics = client.get_stream_topics(stream_id=stream.stream_id)
@@ -46,27 +40,21 @@ def fetch_stream(
     )
 
     for topic in topics:
-        yield from fetch_topic(
+        yield from stream_topic_messages(
             client=client,
-            from_date=from_date,
-            to_date=to_date,
             stream=stream,
             topic=topic,
         )
 
 
-def fetch_all_streams(
+def stream_all_messages(
     client: PZulipClient,
-    from_date: datetime,
-    to_date: datetime,
 ) -> Generator[ZulipMessage, None, None]:
     streams = client.get_streams()
     logging.info("Fetched %s streams", len(streams))
 
     for stream in streams:
-        yield from fetch_stream(
+        yield from stream_stream_messages(
             client=client,
-            from_date=from_date,
-            to_date=to_date,
             stream=stream,
         )
