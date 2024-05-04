@@ -1,3 +1,7 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "zulip-digest"
 version = "0.1.0"
@@ -5,6 +9,9 @@ description = ""
 authors = ["Guillaume Desforges <guillaume.desforges.pro@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+
+[tool.poetry.scripts]
+zulip-digest = "zulip_digest.cli:cli"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -14,12 +21,8 @@ click = "^8.1.7"
 pydantic = "^2.7.1"
 gpt4all = "^2.6.0"
 
-
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.4.3"
 pyright = "^1.1.361"
 pytest = "^8.2.0"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
