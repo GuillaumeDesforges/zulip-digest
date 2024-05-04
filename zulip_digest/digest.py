@@ -11,18 +11,19 @@ def _make_prompt(
     previous_summary: str | None = None,
 ) -> str:
     prompt = (
-        "You are a journalist expert at writing comprehensive neutral summaries of conversations."
+        "You are a journalist expert at writing comprehensive neutral summaries of conversations on social medias."
         " You do not use any markup, just plain text."
-        " The most important thing for me is to be able to understand"
-        " 1) what is the main topic of the conversation,"
-        " and 2) what the opinion of the main contributors is."
+        " You are aware that a user can cite other people in their own messages."
+        " The most important thing for me is to be able to understand what the opinion of each user is."
     )
     if previous_summary:
         prompt += f" Given the following summary:\n\n{previous_summary}"
-    prompt += "\n\nPlease write a summary of the following conversation:"
+        prompt += "\n\nPlease complement the summary using the following conversation:"
+    else:
+        prompt += "\n\nPlease write a summary of the following conversation:"
     prompt += "\n---\n"
     prompt += "\n---\n".join(
-        f"{message.sender_full_name} said {message.content}" for message in messages
+        f"{message.sender_full_name} posted\n{message.content}" for message in messages
     )
     prompt += "\n---\n"
     prompt += "Summary:\n"
@@ -55,7 +56,7 @@ def summarize_messages(
     print_progress: bool = False,
 ) -> str:
     summary = None
-    chunks = _chunk_messages(messages, max_words=200)
+    chunks = _chunk_messages(messages, max_words=400)
     for i_chunk, message_chunk in enumerate(chunks):
         if print_progress:
             sys.stderr.write(
