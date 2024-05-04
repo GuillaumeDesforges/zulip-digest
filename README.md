@@ -31,7 +31,7 @@ Requirements: Python 3+
 Install from the repository:
 
 ```bash
-pip install https+git://github.com/GuillaumeDesforges/zulip-digest.git
+pip install git+https://github.com/GuillaumeDesforges/zulip-digest.git
 ```
 
 Then create a file `.zuliprc` as specified in the [Zulip documentation](https://zulip.com/api/configuring-python-bindings#configuration-keys-and-environment-variables).
