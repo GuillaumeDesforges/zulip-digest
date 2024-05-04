@@ -30,14 +30,23 @@ def _make_prompt(
 
 
 def _chunk_messages(
-    messages: list[ZulipMessage], size: int
-) -> Iterable[list[ZulipMessage]]:
-    i_min = 0
-    i_max = size
-    while i_min < len(messages):
-        yield messages[i_min:i_max]
-        i_min = i_max
-        i_max += size
+    messages: list[ZulipMessage],
+    max_words: int,
+) -> list[list[ZulipMessage]]:
+    chunks: list[list[ZulipMessage]] = []
+    chunk_word_count = 0
+    i_start = 0
+    for i_message, message in enumerate(messages):
+        if i_message == len(messages) - 1:
+            chunks.append(messages[i_start:])
+            break
+        message_word_count = len(message.content.split())
+        if chunk_word_count + message_word_count >= max_words:
+            chunks.append(messages[i_start:i_message])
+            i_start = i_message
+            chunk_word_count = 0
+        chunk_word_count += message_word_count
+    return chunks
 
 
 def summarize_messages(
@@ -46,10 +55,11 @@ def summarize_messages(
     print_progress: bool = False,
 ) -> str:
     summary = None
-    for i_chunk, message_chunk in enumerate(_chunk_messages(messages, size=10)):
+    chunks = _chunk_messages(messages, max_words=200)
+    for i_chunk, message_chunk in enumerate(chunks):
         if print_progress:
             sys.stderr.write(
-                f"Chunk {i_chunk+1}/{(len(messages) // 50)+1} ({len(message_chunk)} messages)\n"
+                f"Chunk {i_chunk+1}/{len(chunks)} ({len(message_chunk)} messages)\n"
             )
         prompt = _make_prompt(message_chunk, summary)
         chunk_summary_generator = model.generate(
