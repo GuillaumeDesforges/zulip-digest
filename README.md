@@ -34,3 +34,12 @@ Install from the repository:
 pip install https+git://github.com/GuillaumeDesforges/zulip-digest.git
 ```
 
+Then create a file `.zuliprc` as specified in the [Zulip documentation](https://zulip.com/api/configuring-python-bindings#configuration-keys-and-environment-variables).
+
+```
+[api]
+key=<API key from the web interface>
+email=<your email address>
+site=<your Zulip server's URI>
+...
+```
