@@ -64,7 +64,11 @@ def cli(
     streams = client.get_streams()
     missing_streams = set(requested_streams) - set(stream.name for stream in streams)
     if missing_streams:
-        logging.error("Unknown streams: %s", missing_streams)
+        logging.error(
+            "Unknown streams %s in %s",
+            missing_streams,
+            set(stream.name for stream in streams),
+        )
         sys.exit(1)
     found_streams = (
         [stream for stream in streams if stream.name in requested_streams]
@@ -76,7 +80,11 @@ def cli(
         topics = client.get_stream_topics(stream_id=stream.stream_id)
         missing_topics = set(requested_topics) - set(topic.name for topic in topics)
         if missing_topics:
-            logging.error("Unknown topics: %s", missing_topics)
+            logging.error(
+                "Unknown topics %s in %s",
+                missing_topics,
+                set(topic.name for topic in topics),
+            )
             sys.exit(1)
         found_topics = (
             [topic for topic in topics if topic.name in requested_topics]
