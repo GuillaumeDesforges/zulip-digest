@@ -10,7 +10,6 @@ def _make_prompt(
     stream_name: str,
     topic_name: str,
     messages: list[ZulipMessage],
-    previous_summary: str | None = None,
 ) -> str:
     prompt = ""
     prompt += "You are a journalist expert at writing comprehensive neutral summaries of conversations on social medias."
@@ -22,19 +21,10 @@ def _make_prompt(
     )
     prompt += "\n---\n"
 
-    if previous_summary is not None:
-        prompt += f"\nHere is the current summary of propositions:\n{previous_summary}"
-        prompt += "\nFind the new propositions. Now rewrite all past and new propositions with the pros and cons."
-    else:
-        prompt += "\nWrite a summary of the propositions and arguments."
-        prompt += "\nInclude the pros and cons."
-
+    prompt += "\nWrite a summary of the propositions and arguments."
     prompt += "\nDon't forget to include the name of the person who posted the proposition or argument."
 
-    if previous_summary is not None:
-        prompt += "\nSummary:"
-    else:
-        prompt += "\nRewritten summary:"
+    prompt += "\nSummary:"
 
     return prompt
 
@@ -77,7 +67,6 @@ def summarize_messages(
             stream_name=stream_name,
             topic_name=topic_name,
             messages=message_chunk,
-            previous_summary=summary,
         )
         logging.debug("Prompt:\n%s", prompt)
         chunk_summary_generator = model.generate(
