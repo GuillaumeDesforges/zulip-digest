@@ -57,10 +57,11 @@ def _make_final_summary_prompt(
     prompt = ""
     prompt += "You are a journalist expert at writing comprehensive neutral summaries of conversations on social medias."
 
-    prompt += "\nI need you to re-organize these reports."
-    prompt += "\nWrite executive summary of the propositions and arguments from the following reports."
+    prompt += (
+        "\nI need you to re-organize these reports into one single executive summary."
+    )
 
-    prompt += "\n".join(f"\n---\n{summary}" for summary in conversation_summaries)
+    prompt += "\n".join(f"\n{summary}" for summary in conversation_summaries)
 
     prompt += "\nSummary:"
 
@@ -74,7 +75,7 @@ def summarize_messages(
     messages: list[ZulipMessage],
     print_progress: bool = False,
 ) -> str:
-    conversation_summaries: list[str] = []
+    chunk_summaries: list[str] = []
     chunks = _chunk_texts(
         elements=messages,
         max_words=400,
@@ -103,14 +104,12 @@ def summarize_messages(
             if print_progress:
                 sys.stderr.write(f"Tokens generated : {i_token+1}\r")
                 sys.stderr.flush()
-        conversation_summary = chunk_summary_builder.getvalue()
-        conversation_summaries.append(conversation_summary)
-        logging.debug(
-            "Summary:\n%s",
-        )
+        chunk_summary = chunk_summary_builder.getvalue()
+        chunk_summaries.append(chunk_summary)
+        logging.debug("Summary:\n%s", chunk_summary)
 
     summary_prompt = _make_final_summary_prompt(
-        conversation_summaries=conversation_summaries,
+        conversation_summaries=chunk_summaries,
     )
     logging.debug("Prompt:\n%s", summary_prompt)
     summary_generator = model.generate(
@@ -126,5 +125,6 @@ def summarize_messages(
             sys.stderr.write(f"Tokens generated : {i_token+1}\r")
             sys.stderr.flush()
     summary = summary_builder.getvalue()
+    logging.debug("Summary:\n%s", summary)
 
     return summary
