@@ -102,6 +102,8 @@ def cli(
             logging.info("Summary for '%s'/'%s'", stream.name, topic.name)
             topic_summary = summarize_messages(
                 model=model,
+                stream_name=stream.name,
+                topic_name=topic.name,
                 messages=messages,
                 print_progress=True,
             )

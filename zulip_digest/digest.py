@@ -7,30 +7,35 @@ from zulip_digest.zulip import ZulipMessage
 
 
 def _make_prompt(
+    stream_name: str,
+    topic_name: str,
     messages: list[ZulipMessage],
     previous_summary: str | None = None,
 ) -> str:
     prompt = ""
-    prompt += (
-        "You are a journalist expert at writing comprehensive neutral summaries of conversations on social medias."
-        "\nYou do not use any markup, just plain text. For example 'Sarah proposes to buy cookies. William agrees Sarah'."
-        "\nThe most important thing for me is to be able to understand what the high-level opinion of each user is."
-    )
+    prompt += "You are a journalist expert at writing comprehensive neutral summaries of conversations on social medias."
 
-    prompt += "\nNew messages:"
+    prompt += f"\nYou received new messages in channel '{stream_name}'/'{topic_name}':"
     prompt += "\n---\n"
     prompt += "\n---\n".join(
         f"{message.sender_full_name} posted\n{message.content}" for message in messages
     )
     prompt += "\n---\n"
 
-    if previous_summary:
-        prompt += "\nPlease summarize the novel information in the new messages to append to the summary of the conversation:"
-        prompt += "\nPrevious summary:"
-        prompt += "\n" + previous_summary
-        prompt += "\nContinue:"
+    if previous_summary is not None:
+        prompt += f"\nHere is the current summary of propositions:\n{previous_summary}"
+        prompt += "\nFind the new propositions. Now rewrite all past and new propositions with the pros and cons."
     else:
-        prompt += "\nPlease write a summary of the conversation as bullet points:"
+        prompt += "\nWrite a summary of the propositions and arguments."
+        prompt += "\nInclude the pros and cons."
+
+    prompt += "\nDon't forget to include the name of the person who posted the proposition or argument."
+
+    if previous_summary is not None:
+        prompt += "\nSummary:"
+    else:
+        prompt += "\nRewritten summary:"
+
     return prompt
 
 
@@ -56,6 +61,8 @@ def _chunk_messages(
 
 def summarize_messages(
     model: GPT4All,
+    stream_name: str,
+    topic_name: str,
     messages: list[ZulipMessage],
     print_progress: bool = False,
 ) -> str:
@@ -66,7 +73,12 @@ def summarize_messages(
             sys.stderr.write(
                 f"Chunk {i_chunk+1}/{len(chunks)} ({len(message_chunk)} messages)\n"
             )
-        prompt = _make_prompt(message_chunk, summary)
+        prompt = _make_prompt(
+            stream_name=stream_name,
+            topic_name=topic_name,
+            messages=message_chunk,
+            previous_summary=summary,
+        )
         logging.debug("Prompt:\n%s", prompt)
         chunk_summary_generator = model.generate(
             prompt,
@@ -81,7 +93,9 @@ def summarize_messages(
         if summary is None:
             summary = chunk_summary_builder.getvalue()
         else:
+            summary += "\n"
             summary += chunk_summary_builder.getvalue()
+        logging.debug("Summary:\n%s", summary)
 
     assert summary is not None
     return summary
