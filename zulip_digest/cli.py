@@ -3,9 +3,10 @@ import logging
 import click
 
 from gpt4all.gpt4all import sys
+from pydantic import BaseModel
 
 from zulip_digest.export import export_topic_messages
-from zulip_digest.api import ZulipClient
+from zulip_digest.api import ZulipClient, ZulipMessage, ZulipStream, ZulipTopic
 
 TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -13,6 +14,12 @@ TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 @click.group()
 def _cli():
     pass
+
+
+class ZulipTopicExportLine(BaseModel):
+    stream: ZulipStream
+    topic: ZulipTopic
+    messages: list[ZulipMessage]
 
 
 @_cli.command()
@@ -99,9 +106,16 @@ def export(
         logging.info("Exporting from %s topics", len(found_topics))
         for topic in found_topics:
             logging.info("Exporting from topic %s", topic.name)
-            for message in export_topic_messages(
-                client=client,
+            topic_messages = list(
+                export_topic_messages(
+                    client=client,
+                    stream=stream,
+                    topic=topic,
+                )
+            )
+            topic_export_line = ZulipTopicExportLine(
                 stream=stream,
                 topic=topic,
-            ):
-                print(message.model_dump_json())
+                messages=topic_messages,
+            )
+            print(topic_export_line.model_dump_json())

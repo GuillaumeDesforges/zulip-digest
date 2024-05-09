@@ -1,28 +1,47 @@
 # zulip digest
 
-Turn conversations on Zulip into summaries with "the power of AI"_TM_.
+Extract and summarize conversations on Zulip with "the power of AI"_TM_.
 
 ## Usage
 
-Summarize all topics in a stream:
+### Export messages
+
+Export messages from a topic in a stream to stdout in JSONL.
 
 ```bash
-zulip-digest -s STREAM_NAME
+zulip-digest export -s STREAM_NAME -t TOPIC_NAME
+```
+
+Export messages from all topics in a stream to stdout in JSONL.
+
+```bash
+zulip-digest export -s STREAM_NAME
+```
+
+Export messages from all topics in every stream to stdout in JSONL.
+
+```bash
+zulip-digest export
 ```
 
 Reference:
 
 ```console
-$ zulip-digest --help
-Usage: zulip-digest [OPTIONS]
+$ zulip-digest export --help
+Usage: zulip-digest export [OPTIONS]
 
 Options:
   -s, --stream TEXT  Streams to process
   -t, --topic TEXT   Topics to process (only 1 stream allowed)
-  --json             Output JSON
-  --debug            Enable debug logging
+  -v, --verbose      Enable verbose logging (1: info, 2: debug)
   --help             Show this message and exit.
 ```
+
+### Summarize
+
+Summarize messages from a topic in a stream from stdin (same JSONL as in the export).
+
+__TODO__
 
 ## Install
 
