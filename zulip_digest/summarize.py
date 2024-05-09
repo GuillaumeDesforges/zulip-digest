@@ -3,25 +3,28 @@ import logging
 import sys
 from typing import Callable
 from gpt4all import GPT4All
-
-from zulip_digest.zulip import ZulipMessage
+from zulip_digest.api import ZulipMessage
+from zulip_digest.model import ZulipTopicExport
 
 
 def _chunk_texts[T](
-    elements: list[T],
+    items: list[T],
     to_str: Callable[[T], str],
     max_words: int,
 ) -> list[list[T]]:
+    """
+    Split a list of items into chunks of items such that the total number of words in each chunk is less than max_words.
+    """
     chunks: list[list[T]] = []
     chunk_word_count = 0
     i_start = 0
-    for i, element in enumerate(elements):
-        if i == len(elements) - 1:
-            chunks.append(elements[i_start:])
+    for i, item in enumerate(items):
+        if i == len(items) - 1:
+            chunks.append(items[i_start:])
             break
-        text_word_count = len(to_str(element).split())
+        text_word_count = len(to_str(item).split())
         if chunk_word_count + text_word_count >= max_words:
-            chunks.append(elements[i_start:i])
+            chunks.append(items[i_start:i])
             i_start = i
             chunk_word_count = 0
         chunk_word_count += text_word_count
@@ -68,16 +71,16 @@ def _make_final_summary_prompt(
     return prompt
 
 
-def summarize_messages(
+def summarize_topic_export(
     model: GPT4All,
     stream_name: str,
     topic_name: str,
-    messages: list[ZulipMessage],
+    topic_export: ZulipTopicExport,
     print_progress: bool = False,
 ) -> str:
     chunk_summaries: list[str] = []
     chunks = _chunk_texts(
-        elements=messages,
+        items=topic_export.messages,
         max_words=400,
         to_str=lambda message: message.content,
     )
