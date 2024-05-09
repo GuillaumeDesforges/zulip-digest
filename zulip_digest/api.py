@@ -1,9 +1,9 @@
-from datetime import datetime
 import logging
+import zulip
+from datetime import datetime
 from typing import Literal, Protocol, TypedDict
 
 from pydantic import BaseModel
-import zulip
 
 
 class ZulipStream(BaseModel):
@@ -42,6 +42,7 @@ class PZulipClient(Protocol):
         num_before: int = 1000,
         num_after: int = 1000,
         narrow: list[ZulipNarrow] | None = None,
+        apply_markdown: bool | None = None,
     ) -> list[ZulipMessage]: ...
 
 
@@ -90,6 +91,7 @@ class ZulipClient(PZulipClient):
         num_before: int = 1000,
         num_after: int = 1000,
         narrow: list[ZulipNarrow] | None = None,
+        apply_markdown: bool | None = None,
     ) -> list[ZulipMessage]:
         response = self._client.get_messages(
             dict(
@@ -97,6 +99,7 @@ class ZulipClient(PZulipClient):
                 num_before=num_before,
                 num_after=num_after,
                 narrow=narrow,
+                apply_markdown=apply_markdown,
                 include_anchor=True,
             )
         )

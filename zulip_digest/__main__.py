@@ -1,3 +1,3 @@
-from zulip_digest.cli import cli
+from zulip_digest.cli import _cli
 
-cli()
+_cli()

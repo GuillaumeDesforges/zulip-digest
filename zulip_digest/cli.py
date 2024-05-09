@@ -1,19 +1,21 @@
 from datetime import datetime
 import logging
-from gpt4all import GPT4All
 import click
-import json
 
 from gpt4all.gpt4all import sys
 
-from zulip_digest.digest import summarize_messages
-from zulip_digest.updates import stream_topic_messages
-from zulip_digest.zulip import ZulipClient
+from zulip_digest.export import export_topic_messages
+from zulip_digest.api import ZulipClient
 
 TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
 
-@click.command()
+@click.group()
+def _cli():
+    pass
+
+
+@_cli.command()
 @click.option(
     "-s",
     "--stream",
@@ -31,34 +33,34 @@ TODAY = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     default=[],
 )
 @click.option(
-    "--json",
-    "output_json",
-    is_flag=True,
-    help="Output JSON",
+    "-v",
+    "--verbose",
+    "verbosity",
+    help="Enable verbose logging (1: info, 2: debug)",
+    count=True,
 )
-@click.option(
-    "--debug",
-    is_flag=True,
-    help="Enable debug logging",
-)
-def cli(
+def export(
     requested_streams: list[str],
     requested_topics: list[str],
-    output_json: bool,
-    debug: bool,
+    verbosity: int,
 ):
-    # setup env
-    log_level = logging.DEBUG if debug else logging.INFO
-    logging.basicConfig(level=log_level)
+    # setup logging
+    log_level = None
+    match verbosity:
+        case 1:
+            log_level = logging.INFO
+        case 2:
+            log_level = logging.DEBUG
+    if log_level:
+        logging.basicConfig(level=log_level)
 
     # check args
     if requested_topics and len(requested_streams) != 1:
-        logging.error("Topics can only be specified with a single stream")
+        click.echo("Topics can only be specified with a single stream", err=True)
         sys.exit(1)
 
     # setup
     client = ZulipClient(config_file=".zuliprc")
-    model = GPT4All("mistral-7b-openorca.gguf2.Q4_0.gguf")
 
     # run
     streams = client.get_streams()
@@ -76,7 +78,10 @@ def cli(
         else streams
     )
 
+    logging.info("Exporting from %s streams", len(found_streams))
+
     for stream in found_streams:
+        logging.info("Exporting from stream %s", stream.name)
         topics = client.get_stream_topics(stream_id=stream.stream_id)
         missing_topics = set(requested_topics) - set(topic.name for topic in topics)
         if missing_topics:
@@ -91,31 +96,12 @@ def cli(
             if requested_topics
             else topics
         )
+        logging.info("Exporting from %s topics", len(found_topics))
         for topic in found_topics:
-            messages = list(
-                stream_topic_messages(
-                    client=client,
-                    stream=stream,
-                    topic=topic,
-                )
-            )
-            logging.info("Summary for '%s'/'%s'", stream.name, topic.name)
-            topic_summary = summarize_messages(
-                model=model,
-                stream_name=stream.name,
-                topic_name=topic.name,
-                messages=messages,
-                print_progress=True,
-            )
-            if output_json is True:
-                print(
-                    json.dumps(
-                        {
-                            "stream": stream.name,
-                            "topic": topic.name,
-                            "summary": topic_summary,
-                        }
-                    )
-                )
-            else:
-                print(topic_summary)
+            logging.info("Exporting from topic %s", topic.name)
+            for message in export_topic_messages(
+                client=client,
+                stream=stream,
+                topic=topic,
+            ):
+                print(message.model_dump_json())

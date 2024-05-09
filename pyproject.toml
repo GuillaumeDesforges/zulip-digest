@@ -11,7 +11,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.scripts]
-zulip-digest = "zulip_digest.cli:cli"
+zulip-digest= "zulip_digest.cli:_cli"
 
 [tool.poetry.dependencies]
 python = "^3.12"
